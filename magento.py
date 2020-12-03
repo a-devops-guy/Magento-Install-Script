@@ -34,3 +34,5 @@ else:
     print("Due to dependency limitation Magento 2.3 works with Ubuntu 18 and Magento 2.4 works with Ubuntu 20")
     print("Unsupported OS script works only with ubuntu")
     exit()
+
+    #test
