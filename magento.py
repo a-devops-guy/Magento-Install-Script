@@ -19,10 +19,9 @@ def common_package():
         systemctl enable nginx")
     os.system("""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');""")
 
-def magento_compose(ver,mage_path):
-    command = "cd %s" % (mage_path)
-    os.system(command)
-    command = "composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % ver
+def magento_compose():
+    command = "cd %s & \
+        composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % (os.getenv('MAGENTO_VERSION',default="2.4.1"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
     os.system(command)
     os.system("chown :www-data -R magento & \
         cd magento & \
@@ -30,28 +29,27 @@ def magento_compose(ver,mage_path):
         find var generated vendor pub/static pub/media app/etc -type d -exec chmod u+w {} + & \
         chmod u+x bin/magento")
 
-def sample_data(mage_path):
-    command = "cd %s" % (mage_path)
+def sample_data():
+    command = "cd %s" % (os.getenv('MAGENTO_LOCATION',default="/var/www/"))
     os.system(command)
-    command = "cd magento"
-    os.system(command)
-    os.system("php bin/magento sampledata:deploy")
+    os.system("cd magento & \
+        php bin/magento sampledata:deploy")
 
-def nginx_config(vphp,mage_port,mage_domain,mage_root):
-    os.system("cp ./nginx.conf /etc/nginx/magento.conf")
-    command = "sed -i 's|server  unix:/run/php-fpm/php-fpm.sock;|server  unix:/run/php-fpm/%s-fpm.sock;|g'" % vphp
+def nginx_config(vphp):
+    command = "cp ./nginx.conf /etc/nginx/magento.conf"
     os.system(command)
-    command = "sed -i 's|listen 80;|listen %d;|g'" % mage_port
+    command = "sed -i 's|server  unix:/run/php-fpm/php-fpm.sock;|server  unix:/run/php-fpm/%s-fpm.sock;|g' & \
+        sed -i 's|listen 80;|listen %d;|g' & \
+        sed -i 's|server_name www.magento-dev.com;|server_name %s|g' & \
+        sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento;|set $MAGE_ROOT %smagento|g' & \
+        sed -i 's|include /usr/share/nginx/html/magento/nginx.conf.sample;|include %smagento/nginx.conf.sample;|g' & \
+        rm -f /etc/nginx/site-enabled/default.conf & \
+        ln -s /etc/nginx/site-available/magento.conf /etc/nginx/site-enabled/ & \
+        systemctl restart nginx" % (vphp,os.getenv('MAGENTO_PORT',default="80"),os.getenv('MAGENTO_PORT',default="www.magento-dev.com"),os.getenv('MAGENTO_LOCATION',default="/var/www/"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
     os.system(command)
-    command = "sed -i 's|server_name www.magento-dev.com;|server_name %s|g'" % mage_domain
-    os.system(command)
-    command = "sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento;|set $MAGE_ROOT %smagento|g'" % mage_root
-    os.system(command)
-    command = "sed -i 's|include /usr/share/nginx/html/magento/nginx.conf.sample;|include %smagento/nginx.conf.sample;|g'" % mage_root
-    os.system(command)
-    os.system("rm -f /etc/nginx/site-enabled/default.conf")
-    os.system("ln -s /etc/nginx/site-available/magento.conf /etc/nginx/site-enabled/")
-    os.system("systemctl restart nginx")
+
+def mage_install():
+    print()
 
 os.system("apt-get update -y & \
     apt-get upgrade -y")
@@ -147,17 +145,17 @@ if mage_24 and d["ID"] == "ubuntu" and fossa:
     common_package()
     os.system("apt -y install php7.4 php7.4-fpm php7.4-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}")
     os.system("php composer-setup.php")
-    magento_compose(os.getenv('MAGENTO_VERSION',default="2.4.1"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
-    sample_data(os.getenv('MAGENTO_LOCATION',default="/var/www/"))
-    nginx_config("php7.4",os.getenv('MAGENTO_PORT',default="80"),os.getenv('MAGENTO_PORT',default="www.magento-dev.com"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
-
+    magento_compose()
+    sample_data()
+    nginx_config("php7.4")
+    
 elif mage_23 and d["ID"] == "ubuntu" and bionic:
     common_package()
     os.system("apt -y install php7.3 php7.3-fpm php7.3-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}")
     os.system("php composer-setup.php --version=1.10.17")
-    magento_compose(os.getenv('MAGENTO_VERSION',default="2.3.6"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
-    sample_data(os.getenv('MAGENTO_LOCATION',default="/var/www/"))
-    nginx_config("php7.3",os.getenv('MAGENTO_PORT',default="80"),os.getenv('MAGENTO_PORT',default="www.magento-dev.com"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
+    magento_compose()
+    sample_data()
+    nginx_config("php7.3")
     
 elif mage_24 and d["ID"] == "ubuntu" and bionic:
     print("Due to dependency limitation Magento 2.4 works only on Ubuntu v20")
