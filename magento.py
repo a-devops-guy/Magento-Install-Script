@@ -20,7 +20,7 @@ def common_package():
 
 def magento_compose():
     command = "cd %s & \
-        php composer.phar create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % (os.getenv('MAGENTO_VERSION'),os.getenv('MAGENTO_LOCATION'))
+        php composer.phar -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % (os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_VERSION'))
     os.system(command)
     os.system("chown :www-data -R magento & \
         cd magento & \
