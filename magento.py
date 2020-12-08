@@ -66,8 +66,8 @@ def mysql(q):
     Input = input(q + ' (y/n): ').lower().strip()
     if Input[0] == 'y':
         os.system("apt -y install mysql-server & \
-        systemctl start mysql-server & \
-        systemctl enable mysql-server")
+        systemctl start mysql & \
+        systemctl enable mysql")
         DB_HOST="127.0.0.1"
         DB_NAME="magento"
         DB_USER="magento"
@@ -88,7 +88,7 @@ def mysql(q):
         return mysql("please enter y/n")
 
 def elasticsearch(q):
-    if mage_23 and d["ID"] == "ubuntu" and bionic: 
+    if mage_23 and d["ID"] == "ubuntu" and bionic:
         return "no elaticsearch config required for magento 2.3. configure elasticsearch later in magento BO. skipping... "
     else:
         global SEARCH_ENGINE,ELASTICSEARCH_HOST,ELASTICSEARCH_PORT,ELASTICSEARCH_INDEX_PREFIX,ELASTICSEARCH_TIMEOUT,ELASTICSEARCH_ENABLE_AUTH,ELASTICSEARCH_USERNAME,ELASTICSEARCH_PASSWORD
@@ -154,9 +154,9 @@ bionic =  re.findall("^18", d["VERSION_ID"])
 mage_24 = re.findall("^2.4", os.getenv("MAGENTO_VERSION"))
 mage_23 = re.findall("^2.3", os.getenv("MAGENTO_VERSION"))
 
-mysql("Do you want to install mysql locally?")
-elasticsearch("Do you want to install Elasticsearh locally?")
-redis("Do you want to install redis locally?")
+mysql("\nDo you want to install mysql locally?")
+elasticsearch("\nDo you want to install Elasticsearh locally?")
+redis("\nDo you want to install redis locally?")
 
 if mage_24 and d["ID"] == "ubuntu" and fossa:
     common_package()
