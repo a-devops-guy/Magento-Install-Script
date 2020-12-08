@@ -13,3 +13,8 @@ fi
 echo "Your OS is $ID $VERSION_ID"
 #cat /etc/os-release | grep 'ID='
 #cat /etc/os-release | grep 'VERSION_ID='
+
+future 
+es version select
+add php config edit - sed
+add left over magento env from website 

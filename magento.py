@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 import re
-from goto import goto, label
+from goto import with_goto
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -21,7 +21,7 @@ def common_package():
 
 def magento_compose():
     command = "cd %s & \
-        composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % (os.getenv('MAGENTO_VERSION',default="2.4.1"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
+        composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % (os.getenv('MAGENTO_VERSION'),os.getenv('MAGENTO_LOCATION'))
     os.system(command)
     os.system("chown :www-data -R magento & \
         cd magento & \
@@ -30,7 +30,7 @@ def magento_compose():
         chmod u+x bin/magento")
 
 def sample_data():
-    command = "cd %s" % (os.getenv('MAGENTO_LOCATION',default="/var/www/"))
+    command = "cd %s" % os.getenv('MAGENTO_LOCATION')
     os.system(command)
     os.system("cd magento & \
         php bin/magento sampledata:deploy")
@@ -45,11 +45,101 @@ def nginx_config(vphp):
         sed -i 's|include /usr/share/nginx/html/magento/nginx.conf.sample;|include %smagento/nginx.conf.sample;|g' & \
         rm -f /etc/nginx/site-enabled/default.conf & \
         ln -s /etc/nginx/site-available/magento.conf /etc/nginx/site-enabled/ & \
-        systemctl restart nginx" % (vphp,os.getenv('MAGENTO_PORT',default="80"),os.getenv('MAGENTO_PORT',default="www.magento-dev.com"),os.getenv('MAGENTO_LOCATION',default="/var/www/"),os.getenv('MAGENTO_LOCATION',default="/var/www/"))
+        systemctl restart nginx" % (vphp,os.getenv('MAGENTO_PORT'),os.getenv('MAGENTO_URL'),os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_LOCATION'))
     os.system(command)
 
 def mage_install():
-    print()
+    if os.getenv('MAGENTO_VERSION'):
+        command = """php bin/magento setup:install --admin-firstname=%s --admin-lastname=%s --admin-email=%s --admin-user=%s --admin-password=%s \
+        --base-url=%s --backend-frontname=%s --db-host=%s --db-name=%s --db-user=%s --db-password=%s --db-prefix=%s --cleanup-database \
+        --language=%s --currency=%s --timezone=%s --use-rewrites=%d --use-secure=%d --base-url-secure=%d --use-secure-admin=%d \
+        --search-engine=%s --elasticsearch-host=%s --elasticsearch-port=%d --elasticsearch-index-prefix=%s --elasticsearch-timeout=%d --elasticsearch-enable-auth=%d --elasticsearch-username=%s --elasticsearch-password=%s""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_REWRITE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'),SEARCH_ENGINE,ELASTICSEARCH_HOST,ELASTICSEARCH_PORT,ELASTICSEARCH_INDEX_PREFIX,ELASTICSEARCH_TIMEOUT,ELASTICSEARCH_ENABLE_AUTH,ELASTICSEARCH_USERNAME,ELASTICSEARCH_PASSWORD)
+        os.system(command)
+    else:
+        command = """php bin/magento setup:install --admin-firstname=%s --admin-lastname=%s --admin-email=%s --admin-user=%s --admin-password=%s \
+        --base-url=%s --backend-frontname=%s --db-host=%s --db-name=%s --db-user=%s --db-password=%s --db-prefix=%s --cleanup-database \
+        --language=%s --currency=%s --timezone=%s --use-rewrites=%d --use-secure=%d --base-url-secure=%d --use-secure-admin=%d""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_REWRITE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'))
+        os.system(command)
+
+def mysql(q):
+    global DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX
+    print("WARNING: magento 2.3 support only 5.7 and magento 2.4 support only mysql 8.0")
+    Input = input(q + ' (y/n): ').lower().strip()
+    if Input[0] == 'y':
+        os.system("apt -y install mysql-server & \
+        systemctl start mysql-server & \
+        systemctl enable mysql-server")
+        DB_HOST="127.0.0.1"
+        DB_NAME="magento"
+        DB_USER="magento"
+        DB_PASSWORD="Magento@321"
+    elif Input[0] == 'n':
+        print("Using varibles from .env files for installation")
+        print("DB HOST: ", os.getenv('DB_HOST'))
+        print("DB NAME: ", os.getenv('DB_NAME'))
+        print("DB USER: ", os.getenv('DB_USER'))
+        print("DB PASSWORD: ", os.getenv('DB_PASSWORD'))
+        print("DB TABLE PREFIX: ", os.getenv('DB_PREFIX'))
+        DB_NAME=os.getenv('DB_NAME')
+        DB_USER=os.getenv('DB_USER')
+        DB_PASSWORD=os.getenv('DB_PASSWORD')
+        DB_PREFIX=os.getenv('DB_PREFIX')
+    else:
+        print("Invalid input. Please enter y or n")
+        return mysql("please enter y/n")
+
+def elasticsearch(q):
+    if mage_23 and d["ID"] == "ubuntu" and bionic: 
+        return "no elaticsearch config required for magento 2.3. configure elasticsearch later in magento BO. skipping... "
+    else:
+        global SEARCH_ENGINE,ELASTICSEARCH_HOST,ELASTICSEARCH_PORT,ELASTICSEARCH_INDEX_PREFIX,ELASTICSEARCH_TIMEOUT,ELASTICSEARCH_ENABLE_AUTH,ELASTICSEARCH_USERNAME,ELASTICSEARCH_PASSWORD
+        Input = input(q + " (y/n)?").lower().strip()
+        if Input[0] == 'y':
+            os.system("""wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add - & \
+            apt-get install apt-transport-https && apt-get install openjdk-11-jre -y & \
+            echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list & \
+            apt-get update -y && apt-get install elasticsearch -y""")
+            SEARCH_ENGINE="elasticsearch7"
+            ELASTICSEARCH_HOST="127.0.0.1"
+            ELASTICSEARCH_PORT=9200
+            ELASTICSEARCH_INDEX_PREFIX=""
+            ELASTICSEARCH_TIMEOUT=60
+            ELASTICSEARCH_ENABLE_AUTH=False
+            ELASTICSEARCH_USERNAME=""
+            ELASTICSEARCH_PASSWORD=""
+        elif Input[0] == 'n':
+            print("Using varibles from .env files for installation")
+            print("SEARCH ENGINE: ", os.getenv('SEARCH_ENGINE'))
+            print("ELASTICSEARCH HOST: ", os.getenv('ELASTICSEARCH_HOST'))
+            print("ELASTICSEARCH PORT: ", os.getenv('ELASTICSEARCH_PORT'))
+            print("ELASTICSEARCH INDEX PREFIX: ", os.getenv('ELASTICSEARCH_INDEX_PREFIX'))
+            print("ELASTICSEARCH TIMEOUT: ", os.getenv('ELASTICSEARCH_TIMEOUT'))
+            print("ELASTICSEARCH ENABLE AUTH: ", os.getenv('ELASTICSEARCH_ENABLE_AUTH'))
+            print("ELASTICSEARCH USERNAME: ", os.getenv('ELASTICSEARCH_USERNAME'))
+            print("ELASTICSEARCH PASSWORD: ", os.getenv('ELASTICSEARCH_PASSWORD'))
+            SEARCH_ENGINE=os.getenv('SEARCH_ENGINE')
+            ELASTICSEARCH_HOST=os.getenv('ELASTICSEARCH_HOST')
+            ELASTICSEARCH_PORT=os.getenv('ELASTICSEARCH_PORT')
+            ELASTICSEARCH_INDEX_PREFIX=os.getenv('ELASTICSEARCH_INDEX_PREFIX')
+            ELASTICSEARCH_TIMEOUT=os.getenv('ELASTICSEARCH_TIMEOUT')
+            ELASTICSEARCH_ENABLE_AUTH=os.getenv('ELASTICSEARCH_ENABLE_AUTH')
+            ELASTICSEARCH_USERNAME=os.getenv('ELASTICSEARCH_USERNAME')
+            ELASTICSEARCH_PASSWORD=os.getenv('ELASTICSEARCH_PASSWORD')
+        else:
+            print("enter y or n")
+            return elasticsearch("please enter y/n")
+
+def redis(q):
+    Input = input(q + " (y/n)?").lower().strip()
+    if Input[0] == 'y':
+        os.system("apt -y install redis-server & \
+        systemctl start redis-server & \
+        systemctl enable redis-server")
+    elif Input[0] == 'n':
+        print("Skipping redis installation")
+    else:
+        print("enter y or n")
+        return redis("please enter y/n")
 
 os.system("apt-get update -y & \
     apt-get upgrade -y")
@@ -65,81 +155,9 @@ bionic =  re.findall("^18", d["VERSION_ID"])
 mage_24 = re.findall("^2.4", os.getenv("MAGENTO_VERSION"))
 mage_23 = re.findall("^2.3", os.getenv("MAGENTO_VERSION"))
 
-label .start_mysql
-print("WARNING: magento 2.3 support only 5.7 and magento 2.4 support only mysql 8.0")
-Input = input("do you want mysql to be installed locally (y/n)?").lower().strip()
-if Input[0] == 'y':
-    os.system("apt -y install mysql-server & \
-    systemctl start mysql-server & \
-    systemctl enable mysql-server")
-    DB_HOST="127.0.0.1"
-    DB_NAME="magento"
-    DB_USER="magento"
-    DB_PASSWORD="Magento@321"
-elif Input[0] == 'n':
-    print("Using varibles from .env files for installation")
-    print("DB HOST: ", os.getenv('DB_HOST'))
-    print("DB NAME: ", os.getenv('DB_NAME'))
-    print("DB USER: ", os.getenv('DB_USER'))
-    print("DB PASSWORD: ", os.getenv('DB_PASSWORD'))
-    print("DB TABLE PREFIX: ", os.getenv('DB_PREFIX',default=""))
-    DB_HOST=os.getenv('DB_HOST')
-    DB_NAME=os.getenv('DB_NAME')
-    DB_USER=os.getenv('DB_USER')
-    DB_PASSWORD=os.getenv('DB_PASSWORD')
-    DB_PREFIX=os.getenv('DB_PREFIX',default="")
-else:
-    print("Invalid input. Please enter y or n")
-    goto .start_mysql
-
-label .start_es
-Input = input("do you want elasticsearch to be installed locally (y/n)?").lower().strip()
-if Input[0] == 'y':
-    os.system("""wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add - & \
-    apt-get install apt-transport-https && apt-get install openjdk-11-jre -y & \
-    echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list & \
-    apt-get update -y && apt-get install elasticsearch -y""")
-    SEARCH_ENGINE="elasticsearch7"
-    ELASTICSEARCH_HOST="127.0.0.1"
-    ELASTICSEARCH_PORT=9200
-    ELASTICSEARCH_INDEX_PREFIX=""
-    ELASTICSEARCH_TIMEOUT=60
-    ELASTICSEARCH_ENABLE_AUTH=False
-    ELASTICSEARCH_USERNAME=""
-    ELASTICSEARCH_PASSWORD=""
-elif Input[0] == 'n':
-    print("Using varibles from .env files for installation")
-    print("SEARCH ENGINE: ", os.getenv('SEARCH_ENGINE',default="elasticsearch7"))
-    print("ELASTICSEARCH HOST: ", os.getenv('ELASTICSEARCH_HOST',default="127.0.0.1"))
-    print("ELASTICSEARCH PORT: ", os.getenv('ELASTICSEARCH_PORT',default=9200))
-    print("ELASTICSEARCH INDEX PREFIX: ", os.getenv('ELASTICSEARCH_INDEX_PREFIX',default=""))
-    print("ELASTICSEARCH TIMEOUT: ", os.getenv('ELASTICSEARCH_TIMEOUT',default=""))
-    print("ELASTICSEARCH ENABLE AUTH: ", os.getenv('ELASTICSEARCH_ENABLE_AUTH',default=""))
-    print("ELASTICSEARCH USERNAME: ", os.getenv('ELASTICSEARCH_USERNAME',default=""))
-    print("ELASTICSEARCH PASSWORD: ", os.getenv('ELASTICSEARCH_PASSWORD',default=""))
-    SEARCH_ENGINE=os.getenv('SEARCH_ENGINE',default="elasticsearch7")
-    ELASTICSEARCH_HOST=os.getenv('ELASTICSEARCH_HOST',default="127.0.0.1")
-    ELASTICSEARCH_PORT=os.getenv('ELASTICSEARCH_PORT',default=9200)
-    ELASTICSEARCH_INDEX_PREFIX=os.getenv('ELASTICSEARCH_INDEX_PREFIX',default="")
-    ELASTICSEARCH_TIMEOUT=os.getenv('ELASTICSEARCH_TIMEOUT',default=60)
-    ELASTICSEARCH_ENABLE_AUTH=os.getenv('ELASTICSEARCH_ENABLE_AUTH',default=False)
-    ELASTICSEARCH_USERNAME=os.getenv('ELASTICSEARCH_USERNAME',default="")
-    ELASTICSEARCH_PASSWORD=os.getenv('ELASTICSEARCH_PASSWORD',default="")
-else:
-    print("enter y or n")
-    goto .start_es
-
-label .start_redis
-Input = input("do you want redis to be installed locally (y/n)?").lower().strip()
-if Input[0] == 'y':
-    os.system("apt -y install redis-server & \
-    systemctl start redis-server & \
-    systemctl enable redis-server")
-elif Input[0] == 'n':
-    print("Skipping redis installation")
-else:
-    print("enter y or n")
-    goto .start_redis
+mysql("Do you want to install mysql locally?")
+elasticsearch("Do you want to install Elasticsearh locally?")
+redis("Do you want to install redis locally?")
 
 if mage_24 and d["ID"] == "ubuntu" and fossa:
     common_package()
@@ -148,7 +166,7 @@ if mage_24 and d["ID"] == "ubuntu" and fossa:
     magento_compose()
     sample_data()
     nginx_config("php7.4")
-    
+    mage_install()
 elif mage_23 and d["ID"] == "ubuntu" and bionic:
     common_package()
     os.system("apt -y install php7.3 php7.3-fpm php7.3-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}")
@@ -156,13 +174,11 @@ elif mage_23 and d["ID"] == "ubuntu" and bionic:
     magento_compose()
     sample_data()
     nginx_config("php7.3")
-    
+    mage_install()
 elif mage_24 and d["ID"] == "ubuntu" and bionic:
     print("Due to dependency limitation Magento 2.4 works only on Ubuntu v20")
-
 elif mage_23 and d["ID"] == "ubuntu" and fossa:
     print("Due to dependency limitation Magento 2.3 works only on Ubuntu v18")
-
 else:
     print("Your OS is Unsupported as this script works only with ubuntu")
     exit()
