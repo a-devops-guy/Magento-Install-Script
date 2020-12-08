@@ -17,6 +17,7 @@ echo "Your OS is $ID $VERSION_ID"
 future 
 es version select
 add php config edit - sed
+add elastic search & redis config
 add left over magento env from website 
 eecute script from any path
 more os support (debian,redhat)- centos

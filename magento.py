@@ -16,7 +16,7 @@ def common_package():
     os.system("apt -y install nginx & \
         systemctl start nginx & \
         systemctl enable nginx")
-    os.system("""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');""")
+    os.system("""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"""")
 
 def magento_compose():
     command = "cd %s & \
@@ -97,7 +97,7 @@ def elasticsearch(q):
             os.system("""wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add - & \
             apt-get install apt-transport-https && apt-get install openjdk-11-jre -y & \
             echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list & \
-            apt-get update -y && apt-get install elasticsearch -y""")
+            apt-get update -y && apt-get install elasticsearch -y & systemctl enable elasticsearch & systemctl start elasticsearch""")
             SEARCH_ENGINE="elasticsearch7"
             ELASTICSEARCH_HOST="127.0.0.1"
             ELASTICSEARCH_PORT=9200
@@ -160,7 +160,7 @@ redis("\nDo you want to install redis locally?")
 
 if mage_24 and d["ID"] == "ubuntu" and fossa:
     common_package()
-    os.system("apt -y install php7.4 php7.4-fpm php7.4-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}")
+    os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}""")
     os.system("php composer-setup.php")
     magento_compose()
     sample_data()
@@ -168,7 +168,7 @@ if mage_24 and d["ID"] == "ubuntu" and fossa:
     mage_install()
 elif mage_23 and d["ID"] == "ubuntu" and bionic:
     common_package()
-    os.system("apt -y install php7.3 php7.3-fpm php7.3-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}")
+    os.system("""apt -y install php7.3 php7.3-cli php7.3-fpm php7.3-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}""")
     os.system("php composer-setup.php --version=1.10.17")
     magento_compose()
     sample_data()
