@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 import re
-from goto import with_goto
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)

@@ -1,1 +1,1 @@
-# Magento-Install-Script
+# Magento Install Script
