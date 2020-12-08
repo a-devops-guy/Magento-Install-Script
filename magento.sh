@@ -18,3 +18,5 @@ future
 es version select
 add php config edit - sed
 add left over magento env from website 
+eecute script from any path
+more os support (debian,redhat)- centos
