@@ -16,7 +16,7 @@ def common_package():
     os.system("apt -y install nginx & \
         systemctl start nginx & \
         systemctl enable nginx")
-    os.system("""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"""")
+    os.system(""""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');""""")
 
 def magento_compose():
     command = "cd %s & \
@@ -160,7 +160,7 @@ redis("\nDo you want to install redis locally?")
 
 if mage_24 and d["ID"] == "ubuntu" and fossa:
     common_package()
-    os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}""")
+    os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
     os.system("php composer-setup.php")
     magento_compose()
     sample_data()
@@ -168,7 +168,7 @@ if mage_24 and d["ID"] == "ubuntu" and fossa:
     mage_install()
 elif mage_23 and d["ID"] == "ubuntu" and bionic:
     common_package()
-    os.system("""apt -y install php7.3 php7.3-cli php7.3-fpm php7.3-{bcmath,ctype,curl,dom,gd,iconv,intl,mbstring,mysql,simplexml,soap,xsl,zip,sockets}""")
+    os.system("""apt -y install php7.3 php7.3-cli php7.3-fpm php7.3-bcmath php7.3-ctype php7.3-curl php7.3-dom php7.3-gd php7.3-iconv php7.3-intl php7.3-mbstring php7.3-mysql php7.3-simplexml php7.3-soap php7.3-xsl php7.3-zip php7.3-sockets""")
     os.system("php composer-setup.php --version=1.10.17")
     magento_compose()
     sample_data()
