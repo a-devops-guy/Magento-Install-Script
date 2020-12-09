@@ -20,6 +20,7 @@ def common_package():
         systemctl enable nginx")
     os.system(""""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');""""")
     os.system("php composer-setup.php --install-dir=/usr/local/bin --filename=composer")
+    os.system("composer -n self-update 1.10.17")
 
 def magento_compose():
     command = "cd %s & composer config -g -n http-basic.repo.magento.com 7818b3a976d364c33c59d06ca2366b0e 231d07313d4aab56dcbb481ed71289be & \
@@ -164,7 +165,6 @@ mage_23 = re.findall("^2.3", os.getenv("MAGENTO_VERSION"))
 if mage_24 and d["ID"] == "ubuntu" and fossa:
     common_package()
     os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
-    os.system("composer -n --version=1.10.17")
     magento_compose()
     sample_data()
     nginx_config("php7.4")
@@ -172,7 +172,6 @@ if mage_24 and d["ID"] == "ubuntu" and fossa:
 elif mage_23 and d["ID"] == "ubuntu" and bionic:
     common_package()
     os.system("""apt -y install php7.3 php7.3-cli php7.3-fpm php7.3-bcmath php7.3-ctype php7.3-curl php7.3-dom php7.3-gd php7.3-iconv php7.3-intl php7.3-mbstring php7.3-mysql php7.3-simplexml php7.3-soap php7.3-xsl php7.3-zip php7.3-sockets""")
-    os.system("composer -n --version=1.10.17")
     magento_compose()
     sample_data()
     nginx_config("php7.3")
