@@ -21,3 +21,4 @@ add elastic search & redis config
 add left over magento env from website 
 eecute script from any path
 more os support (debian,redhat)- centos
+change to subprocess for more control over program flow 

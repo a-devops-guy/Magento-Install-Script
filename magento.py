@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 import re
+import shlex
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -19,7 +20,7 @@ def common_package():
     os.system(""""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');""""")
 
 def magento_compose():
-    command = "cd %s & \
+    command = "cd %s & composer config -g http-basic.repo.magento.com 7818b3a976d364c33c59d06ca2366b0e 231d07313d4aab56dcbb481ed71289be & \
         php composer.phar -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % (os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_VERSION'))
     os.system(command)
     os.system("chown :www-data -R magento & \
