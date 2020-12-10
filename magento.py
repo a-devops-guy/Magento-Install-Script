@@ -42,16 +42,20 @@ def sample_data():
 
 def nginx_config(vphp):
     os.chdir(script_path)
-    command = "cp ./nginx.conf /etc/nginx/sites-available/magento.conf"
+    command = "cp -f ./nginx.conf /etc/nginx/sites-available/magento.conf"
     os.system(command)
     os.chdir('/etc/nginx/sites-available/')
+    
+    nginx_default = Path("/etc/nginx/sites-enabled/default.conf")
+    if nginx_default.is_file():
+        os.system("rm -f /etc/nginx/sites-enabled/default.conf")
+    
     command = "sed -i 's|server  unix:/run/php-fpm/php-fpm.sock;|server  unix:/run/php-fpm/%s-fpm.sock;|g' magento.conf & \
         sed -i 's|listen 80;|listen %s;|g magento.conf' & \
         sed -i 's|server_name www.magento-dev.com;|server_name %s|g' magento.conf & \
         sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento2;|set $MAGE_ROOT %s/magento|g' magento.conf & \
         sed -i 's|include /usr/share/nginx/html/magento2/nginx.conf.sample;|include %s/magento/nginx.conf.sample;|g' magento.conf & \
-        rm -f /etc/nginx/sites-enabled/default.conf & \
-        ln -s /etc/nginx/sites-available/magento.conf /etc/nginx/sites-enabled/ & \
+        ln -sf /etc/nginx/sites-available/magento.conf /etc/nginx/sites-enabled/ & \
         systemctl restart nginx" % (vphp,os.getenv('MAGENTO_PORT'),os.getenv('MAGENTO_URL'),os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_LOCATION'))
     os.system(command)
     os.chdir(script_path)
