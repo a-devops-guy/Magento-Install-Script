@@ -28,10 +28,10 @@ def magento_compose():
     print(command)
     os.system(command)
     os.system("chown :www-data -R magento & \
-        cd magento & \
+        cd %s/magento & \
         find var generated vendor pub/static pub/media app/etc -type f -exec chmod u+w {} + & \
         find var generated vendor pub/static pub/media app/etc -type d -exec chmod u+w {} + & \
-        chmod u+x bin/magento")
+        chmod u+x bin/magento") % (os.getenv('MAGENTO_LOCATION'))
 
 def sample_data():
     command = "cd %s" % os.getenv('MAGENTO_LOCATION')
@@ -43,10 +43,10 @@ def nginx_config(vphp):
     command = "cp ./nginx.conf /etc/nginx/magento.conf"
     os.system(command)
     command = "sed -i 's|server  unix:/run/php-fpm/php-fpm.sock;|server  unix:/run/php-fpm/%s-fpm.sock;|g' & \
-        sed -i 's|listen 80;|listen %d;|g' & \
+        sed -i 's|listen 80;|listen %s;|g' & \
         sed -i 's|server_name www.magento-dev.com;|server_name %s|g' & \
-        sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento;|set $MAGE_ROOT %smagento|g' & \
-        sed -i 's|include /usr/share/nginx/html/magento/nginx.conf.sample;|include %smagento/nginx.conf.sample;|g' & \
+        sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento;|set $MAGE_ROOT %s/magento|g' & \
+        sed -i 's|include /usr/share/nginx/html/magento/nginx.conf.sample;|include %s/magento/nginx.conf.sample;|g' & \
         rm -f /etc/nginx/site-enabled/default.conf & \
         ln -s /etc/nginx/site-available/magento.conf /etc/nginx/site-enabled/ & \
         systemctl restart nginx" % (vphp,os.getenv('MAGENTO_PORT'),os.getenv('MAGENTO_URL'),os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_LOCATION'))
