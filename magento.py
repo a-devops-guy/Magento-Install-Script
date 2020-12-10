@@ -99,7 +99,7 @@ def mysql(q):
         print("DB USER: ", os.getenv('DB_USER'))
         print("DB PASSWORD: ", os.getenv('DB_PASSWORD'))
         print("DB TABLE PREFIX: ", os.getenv('DB_PREFIX'))
-        DB_HOST=os.getenv('DB-HOST')
+        DB_HOST=os.getenv('DB_HOST')
         DB_NAME=os.getenv('DB_NAME')
         DB_USER=os.getenv('DB_USER')
         DB_PASSWORD=os.getenv('DB_PASSWORD')
