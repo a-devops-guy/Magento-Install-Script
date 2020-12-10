@@ -7,7 +7,7 @@ import subprocess
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
-script_path = os.popen('pwd').read()
+script_path = os.getcwd()
 
 def common_package():
     os.system("apt -y install software-properties-common & \
@@ -41,35 +41,38 @@ def sample_data():
     os.system("php bin/magento sampledata:deploy")
 
 def nginx_config(vphp):
-    command = "cp ./nginx.conf /etc/nginx/site-available/magento.conf"
+    os.chdir(script_path)
+    command = "cp ./nginx.conf /etc/nginx/sites-available/magento.conf"
     os.system(command)
-    os.chdir('/etc/nginx/site-available/')
-    command = "sed -i 's|server  unix:/run/php-fpm/php-fpm.sock;|server  unix:/run/php-fpm/%s-fpm.sock;|g magento.conf' & \
+    os.chdir('/etc/nginx/sites-available/')
+    command = "sed -i 's|server  unix:/run/php-fpm/php-fpm.sock;|server  unix:/run/php-fpm/%s-fpm.sock;|g' magento.conf & \
         sed -i 's|listen 80;|listen %s;|g magento.conf' & \
-        sed -i 's|server_name www.magento-dev.com;|server_name %s|g magento.conf' & \
-        sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento;|set $MAGE_ROOT %s/magento|g magento.conf' & \
-        sed -i 's|include /usr/share/nginx/html/magento/nginx.conf.sample;|include %s/magento/nginx.conf.sample;|g magento.conf' & \
-        rm -f /etc/nginx/site-enabled/default.conf & \
-        ln -s /etc/nginx/site-available/magento.conf /etc/nginx/site-enabled/ & \
+        sed -i 's|server_name www.magento-dev.com;|server_name %s|g' magento.conf & \
+        sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento2;|set $MAGE_ROOT %s/magento|g' magento.conf & \
+        sed -i 's|include /usr/share/nginx/html/magento2/nginx.conf.sample;|include %s/magento/nginx.conf.sample;|g' magento.conf & \
+        rm -f /etc/nginx/sites-enabled/default.conf & \
+        ln -s /etc/nginx/sites-available/magento.conf /etc/nginx/sites-enabled/ & \
         systemctl restart nginx" % (vphp,os.getenv('MAGENTO_PORT'),os.getenv('MAGENTO_URL'),os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_LOCATION'))
     os.system(command)
     os.chdir(script_path)
 
 def mage_install():
+    os.chdir(os.getenv('MAGENTO_LOCATION'))
+    os.chdir('magento')
     if os.getenv('MAGENTO_VERSION'):
         os.chdir(os.getenv('MAGENTO_LOCATION'))
         os.chdir('magento')
         command = """php bin/magento setup:install --admin-firstname=%s --admin-lastname=%s --admin-email=%s --admin-user=%s --admin-password=%s \
         --base-url=%s --backend-frontname=%s --db-host=%s --db-name=%s --db-user=%s --db-password=%s --db-prefix=%s --cleanup-database \
-        --language=%s --currency=%s --timezone=%s --use-rewrites=%d --use-secure=%d --base-url-secure=%d --use-secure-admin=%d \
-        --search-engine=%s --elasticsearch-host=%s --elasticsearch-port=%d --elasticsearch-index-prefix=%s --elasticsearch-timeout=%d --elasticsearch-enable-auth=%d --elasticsearch-username=%s --elasticsearch-password=%s""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_REWRITE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'),SEARCH_ENGINE,ELASTICSEARCH_HOST,ELASTICSEARCH_PORT,ELASTICSEARCH_INDEX_PREFIX,ELASTICSEARCH_TIMEOUT,ELASTICSEARCH_ENABLE_AUTH,ELASTICSEARCH_USERNAME,ELASTICSEARCH_PASSWORD)
+        --language=%s --currency=%s --timezone=%s --use-rewrites=%s --use-secure=%s --base-url-secure=%s --use-secure-admin=%s \
+        --search-engine=%s --elasticsearch-host=%s --elasticsearch-port=%s --elasticsearch-index-prefix=%s --elasticsearch-timeout=%s --elasticsearch-enable-auth=%s --elasticsearch-username=%s --elasticsearch-password=%s --base-url=%s""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_REWRITE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'),SEARCH_ENGINE,ELASTICSEARCH_HOST,ELASTICSEARCH_PORT,ELASTICSEARCH_INDEX_PREFIX,ELASTICSEARCH_TIMEOUT,ELASTICSEARCH_ENABLE_AUTH,ELASTICSEARCH_USERNAME,ELASTICSEARCH_PASSWORD,os.getenv('BASE_URL'))
         os.system(command)
     else:
         os.chdir(os.getenv('MAGENTO_LOCATION'))
         os.chdir('magento')
         command = """php bin/magento setup:install --admin-firstname=%s --admin-lastname=%s --admin-email=%s --admin-user=%s --admin-password=%s \
         --base-url=%s --backend-frontname=%s --db-host=%s --db-name=%s --db-user=%s --db-password=%s --db-prefix=%s --cleanup-database \
-        --language=%s --currency=%s --timezone=%s --use-rewrites=%d --use-secure=%d --base-url-secure=%d --use-secure-admin=%d""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_REWRITE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'))
+        --language=%s --currency=%s --timezone=%s --use-rewrites=%s --use-secure=%s --base-url-secure=%s --use-secure-admin=%s --base-url=%s""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_REWRITE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'),os.getenv('BASE_URL'))
         os.system(command)
 
 def mysql(q):
@@ -84,6 +87,7 @@ def mysql(q):
         DB_NAME="magento"
         DB_USER="magento"
         DB_PASSWORD="Magento@321"
+        DB_PREFIX=""
     elif Input[0] == 'n':
         print("Using varibles from .env files for installation")
         print("DB HOST: ", os.getenv('DB_HOST'))
@@ -91,6 +95,7 @@ def mysql(q):
         print("DB USER: ", os.getenv('DB_USER'))
         print("DB PASSWORD: ", os.getenv('DB_PASSWORD'))
         print("DB TABLE PREFIX: ", os.getenv('DB_PREFIX'))
+        DB_HOST=os.getenv('DB-HOST')
         DB_NAME=os.getenv('DB_NAME')
         DB_USER=os.getenv('DB_USER')
         DB_PASSWORD=os.getenv('DB_PASSWORD')
@@ -171,10 +176,10 @@ mage_23 = re.findall("^2.3", os.getenv("MAGENTO_VERSION"))
 # redis("\nDo you want to install redis locally?")
 
 if mage_24 and d["ID"] == "ubuntu" and fossa:
-    common_package()
-    os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
-    magento_compose()
-    sample_data()
+    # common_package()
+    # os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
+    # magento_compose()
+    # sample_data()
     nginx_config("php7.4")
     mage_install()
 elif mage_23 and d["ID"] == "ubuntu" and bionic:
