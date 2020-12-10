@@ -22,3 +22,7 @@ add left over magento env from website
 eecute script from any path
 more os support (debian,redhat)- centos
 change to subprocess for more control over program flow 
+
+hostname 
+if magento fodler exist delete the folder or skip or name change?
+magento mysql db create (if db exist ask user for deletion or name change)
