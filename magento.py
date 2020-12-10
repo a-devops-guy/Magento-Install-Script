@@ -23,8 +23,9 @@ def common_package():
     os.system("composer -n self-update 1.10.17")
 
 def magento_compose():
-    command = "cd %s & composer config -g -n http-basic.repo.magento.com 7818b3a976d364c33c59d06ca2366b0e 231d07313d4aab56dcbb481ed71289be & \
-        composer -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s magento" % (os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_VERSION'))
+    command = "composer config -g -n http-basic.repo.magento.com 7818b3a976d364c33c59d06ca2366b0e 231d07313d4aab56dcbb481ed71289be & \
+        composer -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s %s/magento" % (os.getenv('MAGENTO_LOCATION'),os.getenv('MAGENTO_VERSION'))
+    print(command)
     os.system(command)
     os.system("chown :www-data -R magento & \
         cd magento & \
