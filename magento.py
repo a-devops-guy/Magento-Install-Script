@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
+import pymysql
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -25,20 +26,26 @@ def common_package():
     os.system("composer -n self-update 1.10.17")
 
 def magento_compose():
-    #add un & pass to env
-    # command = "composer config -g -n http-basic.repo.magento.com 7818b3a976d364c33c59d06ca2366b0e 231d07313d4aab56dcbb481ed71289be & \
-    #     composer -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s %s/magento" % (os.getenv('MAGENTO_VERSION'),os.getenv('MAGENTO_LOCATION'))
-    # os.system(command)
+    command = "composer config -g -n http-basic.repo.magento.com %s %s & \
+         composer -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s %s/magento" % (os.getenv('ACCESS_KEY'),os.getenv('SECRET_KEY'),os.getenv('MAGENTO_VERSION'),os.getenv('MAGENTO_LOCATION'))
+    os.system(command)
     os.chdir(os.getenv('MAGENTO_LOCATION'))
     os.system("chown :www-data -R magento")
     os.chdir('magento')
     os.system("find var generated vendor pub/static pub/media app/etc -type f -exec chmod u+w {} + & \
         find var generated vendor pub/static pub/media app/etc -type d -exec chmod u+w {} + & \
         chmod u+x bin/magento")
-def sample_data():
-    os.chdir(os.getenv('MAGENTO_LOCATION'))
-    os.chdir('magento')
-    os.system("php bin/magento sampledata:deploy")
+def sample_data(q):
+    Input = input(q + ' (y/n): ').lower().strip()
+    if Input[0] == 'y':
+        os.chdir(os.getenv('MAGENTO_LOCATION'))
+        os.chdir('magento')
+        os.system("php bin/magento sampledata:deploy")
+    elif Input[0] == 'n':
+        print("skipping sample data")
+    else:
+        print("enter y or n")
+        return sample_data("please enter y/n")
 
 def nginx_config(vphp):
     os.chdir(script_path)
@@ -51,7 +58,7 @@ def nginx_config(vphp):
         os.system("rm -f /etc/nginx/sites-enabled/default.conf")
     
     command = "sed -i 's|server  unix:/run/php-fpm/php-fpm.sock;|server  unix:/run/php-fpm/%s-fpm.sock;|g' magento.conf & \
-        sed -i 's|listen 80;|listen %s;|g magento.conf' & \
+        sed -i 's|listen 80;|listen %s;|g' magento.conf & \
         sed -i 's|server_name www.magento-dev.com;|server_name %s;|g' magento.conf & \
         sed -i 's|set $MAGE_ROOT /usr/share/nginx/html/magento2;|set $MAGE_ROOT %s/magento;|g' magento.conf & \
         sed -i 's|include /usr/share/nginx/html/magento2/nginx.conf.sample;|include %s/magento/nginx.conf.sample;|g' magento.conf & \
@@ -79,7 +86,7 @@ def mage_install():
         --language=%s --currency=%s --timezone=%s --use-secure=%s --base-url-secure=%s --use-secure-admin=%s""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'))
         os.system(command)
 
-def mysql(q):
+def mage_mysql(q):
     global DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX
     print("WARNING: magento 2.3 support only 5.7 and magento 2.4 support only mysql 8.0")
     Input = input(q + ' (y/n): ').lower().strip()
@@ -92,6 +99,32 @@ def mysql(q):
         DB_USER="magento"
         DB_PASSWORD="Magento@321"
         DB_PREFIX=""
+
+        def getDatabaseConnection(ipaddress, usr, passwd, charset, curtype):
+            sqlCon  = pymysql.connect(host=ipaddress, user=usr, password=passwd, charset=charset, cursorclass=curtype)
+            return sqlCon
+
+        # Define a method to create MySQL users
+        def createUser(cursor, userName, password, querynum=0, updatenum=0, connection_num=0):
+            try:
+                sqlCreateUser = "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';"%(userName, password)
+                cursor.execute(sqlCreateUser)
+            except Exception as Ex:
+                print("Error creating MySQL User: %s"%(Ex))
+            
+        # Connection parameters and access credentials
+        ipaddress   = "127.0.0.1"  # MySQL server is running on local machine
+        usr         = "root"        
+        passwd      = ""            
+        charset     = "utf8mb4"     
+        curtype    = pymysql.cursors.DictCursor    
+
+        mySQLConnection = getDatabaseConnection(ipaddress, usr, passwd, charset, curtype)
+        mySQLCursor     = mySQLConnection.cursor()
+        createUser(mySQLCursor, "magento","Magento@321$%")
+        mySqlListUsers = "select host, user from mysql.user;"
+        mySQLCursor.execute(mySqlListUsers)
+
     elif Input[0] == 'n':
         print("Using varibles from .env files for installation")
         print("DB HOST: ", os.getenv('DB_HOST'))
@@ -106,7 +139,7 @@ def mysql(q):
         DB_PREFIX=os.getenv('DB_PREFIX')
     else:
         print("Invalid input. Please enter y or n")
-        return mysql("please enter y/n")
+        return mage_mysql("please enter y/n")
 
 def elasticsearch(q):
     if mage_23 and d["ID"] == "ubuntu" and bionic:
@@ -161,8 +194,8 @@ def redis(q):
         print("enter y or n")
         return redis("please enter y/n")
 
-# os.system("apt-get update -y & \
-#     apt-get upgrade -y")
+os.system("apt-get update -y & \
+     apt-get upgrade -y")
 
 with open("/etc/os-release") as f:
     d = {}
@@ -175,22 +208,22 @@ bionic =  re.findall("^18", d["VERSION_ID"])
 mage_24 = re.findall("^2.4", os.getenv("MAGENTO_VERSION"))
 mage_23 = re.findall("^2.3", os.getenv("MAGENTO_VERSION"))
 
-mysql("\nDo you want to install mysql locally?")
+mage_mysql("\nDo you want to install mysql locally?")
 elasticsearch("\nDo you want to install Elasticsearh locally?")
 redis("\nDo you want to install redis locally?")
 
 if mage_24 and d["ID"] == "ubuntu" and fossa:
-    # common_package()
-    # os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
-    # magento_compose()
-    # sample_data()
+    common_package()
+    os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
+    magento_compose()
+    sample_data("Do you want to install sample data?")
     nginx_config("php7.4")
     mage_install()
 elif mage_23 and d["ID"] == "ubuntu" and bionic:
     common_package()
     os.system("""apt -y install php7.3 php7.3-cli php7.3-fpm php7.3-bcmath php7.3-ctype php7.3-curl php7.3-dom php7.3-gd php7.3-iconv php7.3-intl php7.3-mbstring php7.3-mysql php7.3-simplexml php7.3-soap php7.3-xsl php7.3-zip php7.3-sockets""")
     magento_compose()
-    sample_data()
+    sample_data("Do you want to install sample data?")
     nginx_config("php7.3")
     mage_install()
 elif mage_24 and d["ID"] == "ubuntu" and bionic:

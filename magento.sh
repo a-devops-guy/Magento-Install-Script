@@ -24,5 +24,6 @@ more os support (debian,redhat)- centos
 change to subprocess for more control over program flow 
 
 hostname 
-if magento fodler exist delete the folder or skip or name change?
-magento mysql db create (if db exist ask user for deletion or name change)
+ - new var magento folder 
+ un & password fr magento github repo - testing phase
+magento mysql db create (if db exist ask user for deletion or name change) - testing phase 
