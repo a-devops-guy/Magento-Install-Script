@@ -26,9 +26,9 @@ def common_package():
 
 def magento_compose():
     #add un & pass to env
-    command = "composer config -g -n http-basic.repo.magento.com 7818b3a976d364c33c59d06ca2366b0e 231d07313d4aab56dcbb481ed71289be & \
-        composer -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s %s/magento" % (os.getenv('MAGENTO_VERSION'),os.getenv('MAGENTO_LOCATION'))
-    os.system(command)
+    # command = "composer config -g -n http-basic.repo.magento.com 7818b3a976d364c33c59d06ca2366b0e 231d07313d4aab56dcbb481ed71289be & \
+    #     composer -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s %s/magento" % (os.getenv('MAGENTO_VERSION'),os.getenv('MAGENTO_LOCATION'))
+    # os.system(command)
     os.chdir(os.getenv('MAGENTO_LOCATION'))
     os.system("chown :www-data -R magento")
     os.chdir('magento')
