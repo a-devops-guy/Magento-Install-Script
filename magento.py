@@ -175,9 +175,9 @@ bionic =  re.findall("^18", d["VERSION_ID"])
 mage_24 = re.findall("^2.4", os.getenv("MAGENTO_VERSION"))
 mage_23 = re.findall("^2.3", os.getenv("MAGENTO_VERSION"))
 
-# mysql("\nDo you want to install mysql locally?")
-# elasticsearch("\nDo you want to install Elasticsearh locally?")
-# redis("\nDo you want to install redis locally?")
+mysql("\nDo you want to install mysql locally?")
+elasticsearch("\nDo you want to install Elasticsearh locally?")
+redis("\nDo you want to install redis locally?")
 
 if mage_24 and d["ID"] == "ubuntu" and fossa:
     # common_package()
