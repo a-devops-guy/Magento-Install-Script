@@ -20,5 +20,5 @@ This script will install magento v2 on your ubuntu OS by inputting required deta
 1. Use user preferred ES version if magento supports
 2. Edit magento recommened PHP like nginx configuration
 3. Support more os like centos
-4. Change of module from OS to [pexpect](https://github.com/pexpect/pexpect) & subprocess for more granular control of program flow 
+4. Change of module from OS to [pexpect](https://github.com/pexpect/pexpect) & [subprocess](https://docs.python.org/3/library/subprocess.html) for more granular control of program flow 
 5. User preference magento folder name
