@@ -114,10 +114,10 @@ def mage_mysql(q):
             
         # Connection parameters and access credentials
         ipaddress   = "127.0.0.1"  # MySQL server is running on local machine
-        usr         = "root"        
-        passwd      = ""            
-        charset     = "utf8mb4"     
-        curtype    = pymysql.cursors.DictCursor    
+        usr         = "root" 
+        passwd      = "Magento@321$%"
+        charset     = "utf8mb4"
+        curtype    = pymysql.cursors.DictCursor
 
         mySQLConnection = getDatabaseConnection(ipaddress, usr, passwd, charset, curtype)
         mySQLCursor     = mySQLConnection.cursor()
