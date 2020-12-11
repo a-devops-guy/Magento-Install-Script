@@ -3,10 +3,12 @@ from dotenv import load_dotenv
 from pathlib import Path
 import re
 
+#Load .env from the path .  
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
 script_path = os.getcwd()
 
+#Common packages to install for magento - apache, unzip, php-repo, nginx, compose - v1.10
 def common_package():
     os.system("apt -y install software-properties-common & \
         add-apt-repository ppa:ondrej/php & \
@@ -22,6 +24,7 @@ def common_package():
     os.system("php composer-setup.php --install-dir=/usr/local/bin --filename=composer")
     os.system("composer -n self-update 1.10.17")
 
+#downloading magento using composer
 def magento_compose():
     command = "composer config -g -n http-basic.repo.magento.com %s %s & \
          composer -n create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=%s %s/magento" % (os.getenv('ACCESS_KEY'),os.getenv('SECRET_KEY'),os.getenv('MAGENTO_VERSION'),os.getenv('MAGENTO_LOCATION'))
@@ -33,6 +36,7 @@ def magento_compose():
         find var generated vendor pub/static pub/media app/etc -type d -exec chmod u+w {} + & \
         chmod u+x bin/magento")
 
+#Sample data for magento 
 def sample_data(q):
     Input = input(q + ' (y/n): ').lower().strip()
     if Input[0] == 'y':
@@ -45,6 +49,7 @@ def sample_data(q):
         print("enter y or n")
         return sample_data("please enter y/n")
 
+#Nginx configuration 
 def nginx_config(vphp):
     os.chdir(script_path)
     command = "cp -f ./nginx.conf /etc/nginx/sites-available/magento.conf"
@@ -65,6 +70,7 @@ def nginx_config(vphp):
     os.system(command)
     os.chdir(script_path)
 
+#installing magento command line setup:install
 def mage_install():
     os.chdir(os.getenv('MAGENTO_LOCATION'))
     os.chdir('magento')
@@ -84,6 +90,7 @@ def mage_install():
         --language=%s --currency=%s --timezone=%s --use-secure=%s --base-url-secure=%s --use-secure-admin=%s""" % (os.getenv('ADMIN_FIRSTNAME'),os.getenv('ADMIN_LASTNAME'),os.getenv('ADMIN_EMAIL'),os.getenv('ADMIN_USER'),os.getenv('ADMIN_PASSWORD'),os.getenv('BASE_URL'),os.getenv('BACKEND_FRONTNAME'),DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX,os.getenv('LANGUAGE'),os.getenv('CURRENCY'),os.getenv('TIMEZONE'),os.getenv('USE_SECURE'),os.getenv('BASE_URL_SECURE'),os.getenv('USE_SECURE_ADMIN'))
         os.system(command)
 
+#Installing MySQL in localhost and inititilizing .env variable 
 def mage_mysql(q):
     global DB_HOST,DB_NAME,DB_USER,DB_PASSWORD,DB_PREFIX
     print("WARNING: magento 2.3 support only 5.7 and magento 2.4 support only mysql 8.0")
@@ -126,6 +133,7 @@ def mage_mysql(q):
         print("Invalid input. Please enter y or n")
         return mage_mysql("please enter y/n")
 
+#Installing ES7 in localhost and inititilizing .env variable 
 def elasticsearch(q):
     if mage_23 and d["ID"] == "ubuntu" and bionic:
         return "no elaticsearch config required for magento 2.3. configure elasticsearch later in magento BO. skipping... "
@@ -167,6 +175,7 @@ def elasticsearch(q):
             print("enter y or n")
             return elasticsearch("please enter y/n")
 
+#Installing redis in localhost
 def redis(q):
     Input = input(q + " (y/n)?").lower().strip()
     if Input[0] == 'y':
@@ -179,24 +188,29 @@ def redis(q):
         print("enter y or n")
         return redis("please enter y/n")
 
+#OS update
 os.system("apt-get update -y & \
      apt-get upgrade -y")
 
+#converting the os-release into dictionary 
 with open("/etc/os-release") as f:
     d = {}
     for line in f:
         k,v = line.rstrip().split("=")
         d[k] = v.strip('"')
 
+#Regex to find version id and magento version from .env for compatability check 
 fossa = re.findall("^20", d["VERSION_ID"])
 bionic =  re.findall("^18", d["VERSION_ID"])
 mage_24 = re.findall("^2.4", os.getenv("MAGENTO_VERSION"))
 mage_23 = re.findall("^2.3", os.getenv("MAGENTO_VERSION"))
 
+#function for installing mysql,ES,redis
 mage_mysql("\nDo you want to install mysql locally?")
 elasticsearch("\nDo you want to install Elasticsearh locally?")
 redis("\nDo you want to install redis locally?")
 
+#Installing php version for the magento version in .env and compatabilty checking
 if mage_24 and d["ID"] == "ubuntu" and fossa:
     common_package()
     os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
@@ -211,9 +225,31 @@ elif mage_23 and d["ID"] == "ubuntu" and bionic:
     sample_data("Do you want to install sample data?")
     mage_install()
 elif mage_24 and d["ID"] == "ubuntu" and bionic:
-    print("Due to dependency limitation Magento 2.4 works only on Ubuntu v20")
+    Input = input('Is MySQL 8.0 installed in different host?' + ' (y/n): ').lower().strip()
+    if Input[0] == 'y':
+        common_package()
+        os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
+        magento_compose()
+        sample_data("Do you want to install sample data?")
+        nginx_config("php7.4")
+        mage_install()
+    elif Input[0] == 'n':
+        print("Due to dependency limitation Magento 2.4 works only on Ubuntu v20")
+    else:
+        print("enter y or n")
 elif mage_23 and d["ID"] == "ubuntu" and fossa:
-    print("Due to dependency limitation Magento 2.3 works only on Ubuntu v18")
+    Input = input('Is MySQL 8.0 installed in different host?' + ' (y/n): ').lower().strip()
+    if Input[0] == 'y':
+        common_package()
+        os.system("""apt -y install php7.4 php7.4-cli php7.4-fpm php7.4-bcmath php7.4-ctype php7.4-curl php7.4-dom php7.4-gd php7.4-iconv php7.4-intl php7.4-mbstring php7.4-mysql php7.4-simplexml php7.4-soap php7.4-xsl php7.4-zip php7.4-sockets""")
+        magento_compose()
+        sample_data("Do you want to install sample data?")
+        nginx_config("php7.4")
+        mage_install()
+    elif Input[0] == 'n':
+        print("Due to dependency limitation Magento 2.4 works only on Ubuntu v20")
+    else:
+        print("enter y or n")
 else:
     print("Your OS is Unsupported as this script works only with ubuntu")
     exit()
