@@ -25,5 +25,7 @@ change to subprocess for more control over program flow
 
 hostname 
  - new var magento folder 
+subprocess
+
  un & password fr magento github repo - testing phase
 magento mysql db create (if db exist ask user for deletion or name change) - testing phase 

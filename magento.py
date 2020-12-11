@@ -2,9 +2,6 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 import re
-import shlex
-import subprocess
-import pymysql
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -21,7 +18,7 @@ def common_package():
     os.system("apt -y install nginx & \
         systemctl start nginx & \
         systemctl enable nginx")
-    os.system(""""php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');""""")
+    os.system("""php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\"""")
     os.system("php composer-setup.php --install-dir=/usr/local/bin --filename=composer")
     os.system("composer -n self-update 1.10.17")
 
@@ -212,7 +209,6 @@ elif mage_23 and d["ID"] == "ubuntu" and bionic:
     os.system("""apt -y install php7.3 php7.3-cli php7.3-fpm php7.3-bcmath php7.3-ctype php7.3-curl php7.3-dom php7.3-gd php7.3-iconv php7.3-intl php7.3-mbstring php7.3-mysql php7.3-simplexml php7.3-soap php7.3-xsl php7.3-zip php7.3-sockets""")
     magento_compose()
     sample_data("Do you want to install sample data?")
-    nginx_config("php7.3")
     mage_install()
 elif mage_24 and d["ID"] == "ubuntu" and bionic:
     print("Due to dependency limitation Magento 2.4 works only on Ubuntu v20")
