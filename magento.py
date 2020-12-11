@@ -99,32 +99,13 @@ def mage_mysql(q):
         DB_USER="magento"
         DB_PASSWORD="Magento@321"
         DB_PREFIX=""
-
-        def getDatabaseConnection(ipaddress, usr, passwd, charset, curtype):
-            sqlCon  = pymysql.connect(host=ipaddress, user=usr, password=passwd, charset=charset, cursorclass=curtype)
-            return sqlCon
-
-        # Define a method to create MySQL users
-        def createUser(cursor, userName, password, querynum=0, updatenum=0, connection_num=0):
-            try:
-                sqlCreateUser = "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';"%(userName, password)
-                cursor.execute(sqlCreateUser)
-            except Exception as Ex:
-                print("Error creating MySQL User: %s"%(Ex))
-            
-        # Connection parameters and access credentials
-        ipaddress   = "127.0.0.1"  # MySQL server is running on local machine
-        usr         = "root" 
-        passwd      = "Magento@321$%"
-        charset     = "utf8mb4"
-        curtype    = pymysql.cursors.DictCursor
-
-        mySQLConnection = getDatabaseConnection(ipaddress, usr, passwd, charset, curtype)
-        mySQLCursor     = mySQLConnection.cursor()
-        createUser(mySQLCursor, "magento","Magento@321$%")
-        mySqlListUsers = "select host, user from mysql.user;"
-        mySQLCursor.execute(mySqlListUsers)
-
+        print("DB HOST: ", DB_HOST)
+        print("DB NAME: ", DB_NAME)
+        print("DB USER: ", DB_USER)
+        print("DB PASSWORD: ", DB_PASSWORD)
+        os.system("""mysql -u root -e "create user 'magento'@'localhost' identified by 'Magento@321$%'""")
+        os.system("""mysql -u root -e "create database magento""")
+        os.system("""mysql -u root -e "GRANT ALL PRIVILEGES ON magento.* TO 'magento'@'localhost'""")
     elif Input[0] == 'n':
         print("Using varibles from .env files for installation")
         print("DB HOST: ", os.getenv('DB_HOST'))
