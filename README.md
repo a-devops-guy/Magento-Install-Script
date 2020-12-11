@@ -5,12 +5,12 @@
 
 This script will install magento v2 on your ubuntu OS by inputting required details in .env file and start the script. The script will take care the rest starting from the mysql, ES & redis (if required) till the installation of the magento using setup:install 
 
-#### WARNING: Due to dependency limitation Magento 2.4 works only on Ubuntu v20
-#### WARNING: Due to dependency limitation Magento 2.3 works only on Ubuntu v18
-
 ### Requirement
 1. Python 3.9
 2. Ubuntu
+
+#### WARNING: Due to dependency limitation Magento 2.4 works only on Ubuntu v20
+#### WARNING: Due to dependency limitation Magento 2.3 works only on Ubuntu v18
 
 ### How to run the script
 1. Install the python requirements - **pip3 install python-dotenv** or use **pip3 install -r requirements.txt** as it install all dependencies if the list grows in future
