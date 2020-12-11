@@ -13,7 +13,7 @@ This script will install magento v2 on your ubuntu OS by inputting required deta
 2. Give all the required variabled in [.env](https://github.com/jkk120496/Magento-Install-Script/blob/master/.env) - refer magento doc for more info https://devdocs.magento.com/guides/v2.4/install-gde/install/cli/install-cli.html
 3. Run the script - python3 [magento.py](https://github.com/jkk120496/Magento-Install-Script/blob/master/magento.py)
 4. If the magento version in the [.env](https://github.com/jkk120496/Magento-Install-Script/blob/master/.env) and OS matches then the script will continue
-5. After OS update script will prompt whether to install mysql,ES,redis locally or use the variables in the [.env](https://github.com/jkk120496/Magento-Install-Script/blob/master/.env) file
+5. After OS update script will prompt whether to install MySQL,ES,Redis locally or use the variables in the [.env](https://github.com/jkk120496/Magento-Install-Script/blob/master/.env) file
 6. Upon cofirmation the script will continue to install and open browser upon finish
 
 #### Future Update
