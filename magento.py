@@ -35,6 +35,7 @@ def magento_compose():
     os.system("find var generated vendor pub/static pub/media app/etc -type f -exec chmod u+w {} + & \
         find var generated vendor pub/static pub/media app/etc -type d -exec chmod u+w {} + & \
         chmod u+x bin/magento")
+
 def sample_data(q):
     Input = input(q + ' (y/n): ').lower().strip()
     if Input[0] == 'y':
@@ -103,9 +104,15 @@ def mage_mysql(q):
         print("DB NAME: ", DB_NAME)
         print("DB USER: ", DB_USER)
         print("DB PASSWORD: ", DB_PASSWORD)
-        os.system("""mysql -u root -e "create user 'magento'@'localhost' identified by 'Magento@321$%'""")
-        os.system("""mysql -u root -e "create database magento""")
-        os.system("""mysql -u root -e "GRANT ALL PRIVILEGES ON magento.* TO 'magento'@'localhost'""")
+        query = """\"create user 'magento'@'localhost' identified by 'Magento@321$%'\""""
+        command = "mysql -u root -e %s" % (query)
+        os.system(command)
+        query = """\"create database magento\""""
+        command = "mysql -u root -e %s" % (query)
+        os.system(command)
+        query = """\"GRANT ALL PRIVILEGES ON magento.* TO 'magento'@'localhost'\""""
+        command = "mysql -u root -e %s" % (query)
+        os.system(command)
     elif Input[0] == 'n':
         print("Using varibles from .env files for installation")
         print("DB HOST: ", os.getenv('DB_HOST'))
